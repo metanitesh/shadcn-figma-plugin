@@ -1,14 +1,18 @@
-<h2>Select Component</h2>
-<select id="component-select">
-  <option value="button">Button</option>
-  <option value="checkbox">Checkbox</option>
-  <option value="radio">Radio</option>
-  <option value="input">Input</option>
-  <option value="textarea">Textarea</option>
-  <option value="accordion">Accordion</option>
-</select>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
+<div class="component-selector">
+  <h2>Select Component</h2>
+  <select id="component-select">
+    <option value="button">Button</option>
+    <option value="checkbox">Checkbox</option>
+    <option value="radio">Radio</option>
+    <option value="input">Input</option>
+    <option value="textarea">Textarea</option>
+    <option value="accordion">Accordion</option>
+  </select>
+  <div class="button-group">
+    <button id="create">Create</button>
+    <button id="cancel">Cancel</button>
+  </div>
+</div>
 <script>
   document.getElementById("create").onclick = () => {
     const select = document.getElementById("component-select");
@@ -28,3 +32,72 @@
     parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
   };
 </script>
+
+<style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .component-selector {
+    padding: 1rem;
+    background-color: #ffffff;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  #component-select {
+    /* width: 100%; */
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    color: #333;
+  }
+
+  #component-select:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+
+  #create {
+    background-color: #007aff;
+    color: #ffffff;
+    margin-right: 12px;
+  }
+
+  #create:hover {
+    background-color: #0056b3;
+  }
+
+  #cancel {
+    background-color: #f2f2f2;
+    color: #333;
+  }
+
+  #cancel:hover {
+    background-color: #e6e6e6;
+  }
+
+  button:active {
+    transform: scale(0.98);
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: flex-start;
+    padding-top: 1rem;
+  }
+</style>

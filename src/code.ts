@@ -7,7 +7,9 @@ import {
   textarea,
 } from "./components";
 
-figma.showUI(__html__);
+figma.showUI(__html__, {
+  width: 400,
+});
 
 figma.ui.onmessage = (msg: { type: string; component: string }) => {
   const nodes: SceneNode[] = [];
