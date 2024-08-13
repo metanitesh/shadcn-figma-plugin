@@ -1,17 +1,30 @@
-<h2>Rectangle Creator</h2>
-<p>Count: <input id="count" value="5"></p>
+<h2>Select Component</h2>
+<select id="component-select">
+  <option value="button">Button</option>
+  <option value="checkbox">Checkbox</option>
+  <option value="radio">Radio</option>
+  <option value="input">Input</option>
+  <option value="inline code">Textarea</option>
+  <option value="switch">Select</option>
+</select>
 <button id="create">Create</button>
 <button id="cancel">Cancel</button>
 <script>
+  document.getElementById("create").onclick = () => {
+    const select = document.getElementById("component-select");
+    const selectedComponent = select.value;
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "create-component",
+          component: selectedComponent,
+        },
+      },
+      "*"
+    );
+  };
 
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*')
-}
-
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
-
+  document.getElementById("cancel").onclick = () => {
+    parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
+  };
 </script>
