@@ -1,4 +1,11 @@
-import { button, checkbox, input, radio } from "./components";
+import {
+  accordion,
+  button,
+  checkbox,
+  input,
+  radio,
+  textarea,
+} from "./components";
 
 figma.showUI(__html__);
 
@@ -19,6 +26,12 @@ figma.ui.onmessage = (msg: { type: string; component: string }) => {
           break;
         case "input":
           node = figma.createNodeFromSvg(input);
+          break;
+        case "textarea":
+          node = figma.createNodeFromSvg(textarea);
+          break;
+        case "accordion":
+          node = figma.createNodeFromSvg(accordion);
           break;
         default:
           figma.notify("Unknown component type");
