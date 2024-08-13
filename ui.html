@@ -34,6 +34,12 @@
 </script>
 
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
   body {
     font-family: Arial, Helvetica, sans-serif;
   }
@@ -47,6 +53,7 @@
     font-size: 1.3rem;
     font-weight: 600;
     color: #1a1a1a;
+    padding-bottom: 1rem;
   }
 
   #component-select {
@@ -69,17 +76,16 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.1s ease;
   }
 
   #create {
-    background-color: #007aff;
-    color: #ffffff;
+    background-color: #def368;
     margin-right: 12px;
+    color: #007373;
   }
 
   #create:hover {
-    background-color: #0056b3;
+    outline: 1px solid #007373;
   }
 
   #cancel {
@@ -88,7 +94,7 @@
   }
 
   #cancel:hover {
-    background-color: #e6e6e6;
+    outline: 1px solid #333;
   }
 
   button:active {
