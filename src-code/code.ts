@@ -36,3 +36,7 @@ listenTS("createComponent", (res) => {
 
   figma.closePlugin();
 });
+
+listenTS("closePlugin", () => {
+  figma.closePlugin();
+})

@@ -14,10 +14,14 @@ export const App = () => {
   const [selectedComponent, setSelectedComponent] =
     useState<components>("button");
 
-  const onClick = () => {
+  const onClickCreate = () => {
     dispatchTS("createComponent", {
       component: selectedComponent,
     });
+  };
+
+  const onClickClose = () => {
+    dispatchTS("closePlugin", {});
   };
 
   return (
@@ -39,15 +43,19 @@ export const App = () => {
               "textarea",
               "accordion",
             ].map((component) => (
-              <SelectItem key={component} value={component} onClick={onClick}>
+              <SelectItem key={component} value={component}>
                 {component}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <div className="flex flex-row gap-4">
-          <Button onClick={onClick} size={"sm"}>Create</Button>
-          <Button variant={"destructive"} size={"sm"}>Close</Button>
+          <Button onClick={onClickCreate} size={"sm"}>
+            Create
+          </Button>
+          <Button variant={"destructive"} size={"sm"} onClick={onClickClose}>
+            Close
+          </Button>
         </div>
       </div>
     </>
