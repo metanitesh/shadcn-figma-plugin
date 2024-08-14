@@ -1,30 +1,13 @@
-import {
-  accordion,
-  button,
-  checkbox,
-  input,
-  radio,
-  textarea,
-} from "./components";
-import { components } from "./types";
+import svgMapping from "./lib/svg-mapping";
 import { listenTS } from "./utils/code-utils";
-
-const componentMap: Record<components, string> = {
-  button,
-  checkbox,
-  radio,
-  input,
-  textarea,
-  accordion,
-};
 
 figma.showUI(__html__, {
   width: 720,
   height: 480,
 });
 
-listenTS("createComponent", (res) => {
-  const svg = componentMap[res.component];
+listenTS("createSvg", (res) => {
+  const svg = svgMapping[res.svg];
 
   const node = figma.createNodeFromSvg(svg);
   figma.currentPage.appendChild(node);
@@ -39,4 +22,4 @@ listenTS("createComponent", (res) => {
 
 listenTS("closePlugin", () => {
   figma.closePlugin();
-})
+});

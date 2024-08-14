@@ -7,16 +7,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
-import type { components } from "src-code/types";
+import svgMapping from "./lib/svg-mapping";
+import type { narutoCharacter } from "./lib/types";
 import { dispatchTS } from "./utils/utils";
 
 export const App = () => {
-  const [selectedComponent, setSelectedComponent] =
-    useState<components>("button");
+  const [selectedSvg, setSelectedSvg] = useState<narutoCharacter>();
 
   const onClickCreate = () => {
-    dispatchTS("createComponent", {
-      component: selectedComponent,
+    if (!selectedSvg) {
+      return;
+    }
+    dispatchTS("createSvg", {
+      svg: selectedSvg,
     });
   };
 
@@ -24,27 +27,22 @@ export const App = () => {
     dispatchTS("closePlugin", {});
   };
 
+  const svgMappingArray = Object.keys(svgMapping);
+
   return (
     <>
-      <div className=" flex flex-col gap-4 justify-center items-center w-full h-full">
-        <h1 className="text-xl font-medium">Select Component</h1>
+      <div className="flex h-full w-full flex-col items-center gap-4 py-10">
+        <h1 className="text-xl font-medium">Select Naruto Character</h1>
         <Select
-          onValueChange={(value: components) => setSelectedComponent(value)}
+          onValueChange={(value: narutoCharacter) => setSelectedSvg(value)}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="select" />
           </SelectTrigger>
           <SelectContent>
-            {[
-              "button",
-              "checkbox",
-              "radio",
-              "input",
-              "textarea",
-              "accordion",
-            ].map((component) => (
-              <SelectItem key={component} value={component}>
-                {component}
+            {svgMappingArray.map((svg) => (
+              <SelectItem key={svg} value={svg}>
+                {svg}
               </SelectItem>
             ))}
           </SelectContent>
