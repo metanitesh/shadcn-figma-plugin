@@ -7,6 +7,7 @@ import {
   textarea,
 } from "./components";
 import { components } from "./types";
+import { listenTS } from "./utils/code-utils";
 
 const componentMap: Record<components, string> = {
   button,
@@ -18,28 +19,20 @@ const componentMap: Record<components, string> = {
 };
 
 figma.showUI(__html__, {
-  width: 400,
+  width: 720,
+  height: 480,
 });
 
-figma.ui.onmessage = (msg: { type: string; component: components }) => {
-  if (msg.type === "create-component") {
-    try {
-      const svg = componentMap[msg.component];
+listenTS("createComponent", (res) => {
+  const svg = componentMap[res.component];
 
-      const node = figma.createNodeFromSvg(svg);
-      figma.currentPage.appendChild(node);
+  const node = figma.createNodeFromSvg(svg);
+  figma.currentPage.appendChild(node);
 
-      figma.currentPage.selection = [node];
-      figma.viewport.scrollAndZoomIntoView([node]);
+  figma.currentPage.selection = [node];
+  figma.viewport.scrollAndZoomIntoView([node]);
 
-      figma.notify("SVG component created successfully!");
-    } catch (error) {
-      console.error("Error creating SVG node:", error);
-      figma.notify(
-        "Failed to create SVG component. Check console for details."
-      );
-    }
-  }
+  figma.notify("SVG component created successfully!");
 
   figma.closePlugin();
-};
+});
