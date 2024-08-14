@@ -6,43 +6,30 @@ import {
   radio,
   textarea,
 } from "./components";
+import { components } from "./types";
+
+const componentMap: Record<components, string> = {
+  button,
+  checkbox,
+  radio,
+  input,
+  textarea,
+  accordion,
+};
 
 figma.showUI(__html__, {
   width: 400,
 });
 
-figma.ui.onmessage = (msg: { type: string; component: string }) => {
-  const nodes: SceneNode[] = [];
+figma.ui.onmessage = (msg: { type: string; component: components }) => {
   if (msg.type === "create-component") {
     try {
-      let node;
-      switch (msg.component) {
-        case "button":
-          node = figma.createNodeFromSvg(button);
-          break;
-        case "checkbox":
-          node = figma.createNodeFromSvg(checkbox);
-          break;
-        case "radio":
-          node = figma.createNodeFromSvg(radio);
-          break;
-        case "input":
-          node = figma.createNodeFromSvg(input);
-          break;
-        case "textarea":
-          node = figma.createNodeFromSvg(textarea);
-          break;
-        case "accordion":
-          node = figma.createNodeFromSvg(accordion);
-          break;
-        default:
-          figma.notify("Unknown component type");
-          return;
-      }
+      const svg = componentMap[msg.component];
 
+      const node = figma.createNodeFromSvg(svg);
       figma.currentPage.appendChild(node);
-      nodes.push(node);
 
+      figma.currentPage.selection = [node];
       figma.viewport.scrollAndZoomIntoView([node]);
 
       figma.notify("SVG component created successfully!");
@@ -52,9 +39,6 @@ figma.ui.onmessage = (msg: { type: string; component: string }) => {
         "Failed to create SVG component. Check console for details."
       );
     }
-
-    figma.currentPage.selection = nodes;
-    figma.viewport.scrollAndZoomIntoView(nodes);
   }
 
   figma.closePlugin();
