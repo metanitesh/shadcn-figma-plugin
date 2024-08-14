@@ -2,6 +2,7 @@
 *.log
 *.log.*
 .tmp/
+tmp
 node_modules
 
 out/
