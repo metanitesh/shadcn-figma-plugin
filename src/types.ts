@@ -1,0 +1,1 @@
+export type components = "button" | "checkbox" | "radio" | "input" | "textarea" | "accordion";
