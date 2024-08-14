@@ -2,8 +2,8 @@ import type { FigmaConfig, PluginManifest } from "vite-figma-plugin/lib/types";
 import { version } from "./package.json";
 
 export const manifest: PluginManifest = {
-  name: "kofferX_shadcn", 
-  id: "1405190660804971485", 
+  name: "Naruto SVG Creator", 
+  id: "amanvarshney01.naruto-svg-creator", 
   api: "1.0.0",
   main: "code.js",
   ui: "index.html",
