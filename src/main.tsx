@@ -7,9 +7,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
-import svgMapping from "./lib/svg-mapping";
 import type { narutoCharacter } from "./lib/types";
 import { dispatchTS } from "./utils/utils";
+import svgs from "./lib/svgs";
 
 export const App = () => {
   const [selectedSvg, setSelectedSvg] = useState<narutoCharacter>();
@@ -27,8 +27,6 @@ export const App = () => {
     dispatchTS("closePlugin", {});
   };
 
-  const svgMappingArray = Object.keys(svgMapping);
-
   return (
     <>
       <div className="flex h-full w-full flex-col items-center gap-4 py-10">
@@ -40,7 +38,7 @@ export const App = () => {
             <SelectValue placeholder="select" />
           </SelectTrigger>
           <SelectContent>
-            {svgMappingArray.map((svg) => (
+            {svgs.map((svg) => (
               <SelectItem key={svg} value={svg}>
                 {svg}
               </SelectItem>
