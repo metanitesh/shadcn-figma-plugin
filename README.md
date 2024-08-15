@@ -1,6 +1,6 @@
-# Naruto SVG Creator
+# Shadcn Figma Plugin
 
-A Figma Plugin that allows you to create SVGs of Naruto Characters.
+A template for creating a Figma plugin using Vite, React, Tailwind, and Shadcn/UI.
 
 https://github.com/user-attachments/assets/8cf9a283-f02b-48d6-be5b-77d54607aefe
 
@@ -34,7 +34,7 @@ Development Mode
 
 ## Credits
 
-This project was scaffolded using the [Bolt Figma](https://github.com/hyperbrew/bolt-figma) template.
+This project was scaffolded using the [Bolt Figma](https://github.com/hyperbrew/bolt-figma) template. You can learn more about how to use this template in the original repository.
 
 SVGs are provided by [Vecteezy](https://www.vecteezy.com/).
 
