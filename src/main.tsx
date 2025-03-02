@@ -30,79 +30,20 @@ import {
 
 export const App = () => {
   // Mock data for Naruto characters
-  const characterData = [
-    {
-      id: "tooltip",
-      name: "Configure your campaign to target the right customers",
-      type: "button",
-    },
-    {
-      id: "area_selection_title",
-      name: "Area targeting",
-      type: "title",
-    },
-    {
-      id: "area_selection_subtitle",
-      name: "We maximize your results by targeting all customers in your delivery area. To focus your campaign, please edit the promotional areas.",
-      type: "subtitle",
-    },
-    {
-      id: "area_selection_disabled",
-      name: "We maximize your results by targeting all customers in your delivery area.",
-      type: "text",
-    },
-    {
-      id: "area_selection_description",
-      name: "Your restaurant will be promoted where the promotional areas overlap your delivery area. Click on the green promotional areas to remove or add to your campaign.",
-      type: "description",
-    },
-    {
-      id: "edit_all_promo_areas_selected",
-      name: "Your ad is targeting customers in all the promotional areas.",
-      type: "status",
-    },
-    {
-      id: "all_promo_areas_selected",
-      name: "Your ad will target customers in all the promotional areas.",
-      type: "info",
-    },
-  ];
 
   const [selectedCharacter, setSelectedCharacter] = useState<
-    (typeof characterData)[0] | undefined
+    (typeof libraryData)[0] | undefined
   >();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredCharacters, setFilteredCharacters] = useState(characterData);
+  const [filteredCharacters, setFilteredCharacters] = useState([]);
   const [activeTab, setActiveTab] = useState("content-library");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
-
-  useEffect(() => {
-    // Filter characters based on search query
-    const filtered = characterData.filter((character) =>
-      character.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-    setFilteredCharacters(filtered);
-  }, [searchQuery]);
+  const [libraryData, setLibraryData] = useState<any>([]);
 
   const fetchLibrary = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:3000/api/library/get?token=" +
-          localStorage.getItem("DraftAlpha-authToken"),
-      );
-
-      const data = await response.json();
-      console.log("Library data:", data);
-
-      // Send library data to the plugin code
-      dispatchTS("fetchLibrary", {
-        libraryData: data,
-      });
-    } catch (error) {
-      console.error("Error fetching library data:", error);
-    }
+    dispatchTS("fetchLibrary", {});
   };
 
   const onClickCreate = () => {
@@ -122,7 +63,6 @@ export const App = () => {
     try {
       setIsSigningIn(true);
 
-      console.log("Signing in with:", { username, password });
       // Send sign in request with CORS headers
       dispatchTS("signIn", {
         username,
@@ -130,50 +70,7 @@ export const App = () => {
       });
 
       // Alternative direct fetch approach with CORS headers
-      try {
-        // const response1 = await fetch("https://cat-fact.herokuapp.com/facts", {
-        //   method: "GET",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //     "Access-Control-Allow-Origin": "*",
-        //   },
-        //   mode: "cors",
-        // });
 
-        // console.log("response1--->", await response1.json());
-
-        const response = await fetch(
-          "http://localhost:3000/api/externtal-auth",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              username,
-              password,
-            }),
-          },
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Login successful:", data);
-          const token = data?.token;
-
-          // Store token in localStorage
-          if (token) {
-            localStorage.setItem("DraftAlpha-authToken", token);
-          }
-
-          // Handle successful login
-          // dispatchTS("closePlugin", {});
-        } else {
-          console.error("Login failed:", await response.text());
-        }
-      } catch (fetchError) {
-        console.error("Fetch error:", fetchError);
-      }
       // Send sign in request to main thread
       // dispatchTS("signIn", {
       //   username,
@@ -199,16 +96,18 @@ export const App = () => {
   };
 
   // Group characters by type
-  const groupedCharacters = filteredCharacters.reduce(
-    (acc, character) => {
-      if (!acc[character.type]) {
-        acc[character.type] = [];
+
+  window.onmessage = (event) => {
+    const pluginMessage = event.data.pluginMessage;
+    if (pluginMessage) {
+      // Check the type of message
+      if (pluginMessage.type === "libraryData") {
+        // Process the data received
+        // You can update the UI or perform other actions based on the data.
+        setLibraryData(pluginMessage.data?.items);
       }
-      acc[character.type].push(character);
-      return acc;
-    },
-    {} as Record<string, typeof characterData>,
-  );
+    }
+  };
 
   return (
     <>
@@ -283,48 +182,39 @@ export const App = () => {
               />
 
               <div className="rounded-md border">
-                {Object.keys(groupedCharacters).length > 0 ? (
-                  <Accordion
-                    type="multiple"
-                    className="w-full"
-                    defaultValue={Object.keys(groupedCharacters)}
-                  >
-                    {Object.entries(groupedCharacters).map(
-                      ([type, characters]) => (
-                        <AccordionItem key={type} value={type}>
-                          <AccordionTrigger className="px-3 py-2 font-medium capitalize">
-                            {type} ({characters.length})
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <ul className="divide-y">
-                              {characters.map((character) => (
-                                <li
-                                  key={character.id}
-                                  className={`cursor-pointer p-3 hover:bg-gray-100 ${selectedCharacter?.id === character.id ? "bg-gray-100" : ""}`}
-                                  onClick={() =>
-                                    setSelectedCharacter(character)
-                                  }
+                <ul className="divide-y">
+                  {libraryData.map((libraryItem: any) => (
+                    <li
+                      key={libraryItem.id}
+                      className={`cursor-pointer p-3 hover:bg-gray-100 ${selectedCharacter?.id === libraryItem.id ? "bg-gray-100" : ""}`}
+                      onClick={() => setSelectedCharacter(libraryItem)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <p className="font-light">{libraryItem.copy}</p>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {libraryItem.tag &&
+                              libraryItem.tag.map((tag: any, index: number) => (
+                                <span
+                                  key={index}
+                                  className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-800"
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <div>
-                                      <p className="font-light">
-                                        {character.name}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </li>
+                                  {tag}
+                                </span>
                               ))}
-                            </ul>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ),
-                    )}
-                  </Accordion>
-                ) : (
-                  <div className="p-4 text-center text-gray-500">
-                    No characters found
-                  </div>
-                )}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {libraryItem.status === "active" && (
+                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               <div className="mt-4 flex justify-between">

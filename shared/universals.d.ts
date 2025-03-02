@@ -7,7 +7,5 @@ export interface EventTS {
     username: string;
     password: string;
   };
-  fetchLibrary: {
-    libraryData: any;
-  };
+  fetchLibrary: {};
 }
