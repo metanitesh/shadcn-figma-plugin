@@ -86,6 +86,25 @@ export const App = () => {
     setFilteredCharacters(filtered);
   }, [searchQuery]);
 
+  const fetchLibrary = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/library/get?token=" +
+          localStorage.getItem("DraftAlpha-authToken"),
+      );
+
+      const data = await response.json();
+      console.log("Library data:", data);
+
+      // Send library data to the plugin code
+      dispatchTS("fetchLibrary", {
+        libraryData: data,
+      });
+    } catch (error) {
+      console.error("Error fetching library data:", error);
+    }
+  };
+
   const onClickCreate = () => {
     if (!selectedCharacter) {
       return;
@@ -140,6 +159,13 @@ export const App = () => {
         if (response.ok) {
           const data = await response.json();
           console.log("Login successful:", data);
+          const token = data?.token;
+
+          // Store token in localStorage
+          if (token) {
+            localStorage.setItem("DraftAlpha-authToken", token);
+          }
+
           // Handle successful login
           // dispatchTS("closePlugin", {});
         } else {
@@ -191,7 +217,15 @@ export const App = () => {
           <Tabs defaultValue="sign-in" className="mb-6 w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="sign-in">Sign In</TabsTrigger>
-              <TabsTrigger value="content-library">Content Library</TabsTrigger>
+              <TabsTrigger
+                value="content-library"
+                onClick={() => {
+                  console.log("Fetching library----------->");
+                  fetchLibrary();
+                }}
+              >
+                Content Library
+              </TabsTrigger>
               <TabsTrigger value="brand-guidelines">
                 Brand Guidelines
               </TabsTrigger>

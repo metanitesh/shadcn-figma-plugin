@@ -2,8 +2,8 @@ import svgMapping from "./lib/svg-mapping";
 import { listenTS } from "./utils/code-utils";
 
 figma.showUI(__html__, {
-  width: 600,
-  height: 400,
+  width: 400,
+  height: 600,
   title: "Draft Alpha",
 });
 
@@ -24,6 +24,11 @@ listenTS("createSvg", (res) => {
 
 listenTS("closePlugin", () => {
   figma.closePlugin();
+});
+
+listenTS("fetchLibrary", (res) => {
+  console.log("Received message----*******-->:", res);
+  figma.clientStorage.setAsync("libraryData", res.libraryData);
 });
 
 listenTS("signIn", async () => {

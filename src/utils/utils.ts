@@ -8,11 +8,11 @@ export const dispatch = (msg: Message, global = false, origin = "*") => {
   parent.postMessage(data, origin);
 };
 
-export const dispatchTS = <Key extends keyof EventTS>(
+export const dispatchTS = <Key extends keyof EventTS, T = any>(
   event: Key,
   data: EventTS[Key],
   global = false,
-  origin = "*"
+  origin = "*",
 ) => {
   dispatch({ event, ...data }, global, origin);
 };
@@ -20,7 +20,7 @@ export const dispatchTS = <Key extends keyof EventTS>(
 export const listenTS = <Key extends keyof EventTS>(
   eventName: Key,
   callback: (data: EventTS[Key]) => any,
-  listenOnce = false
+  listenOnce = false,
 ) => {
   const func = (event: MessageEvent<any>) => {
     if (event.data.pluginMessage.event === eventName) {
