@@ -2,11 +2,13 @@ import svgMapping from "./lib/svg-mapping";
 import { listenTS } from "./utils/code-utils";
 
 figma.showUI(__html__, {
-  width: 720,
-  height: 480,
+  width: 600,
+  height: 400,
+  title: "Draft Alpha",
 });
 
 listenTS("createSvg", (res) => {
+  console.log("Received message----*******-->:", res);
   const svg = svgMapping[res.svg];
 
   const node = figma.createNodeFromSvg(svg);
@@ -22,4 +24,23 @@ listenTS("createSvg", (res) => {
 
 listenTS("closePlugin", () => {
   figma.closePlugin();
+});
+
+listenTS("signIn", async () => {
+  console.log("Received message----*******-->:");
+  try {
+    const response = await fetch("http://localhost:3000/api/test", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      mode: "cors",
+    });
+
+    const data = await response.json();
+
+    console.log("Response:", data);
+  } catch (error) {
+    console.error("Error:", error);
+  }
 });
