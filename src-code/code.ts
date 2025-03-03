@@ -7,19 +7,24 @@ figma.showUI(__html__, {
   title: "Draft Alpha",
 });
 
-listenTS("createSvg", (res) => {
-  console.log("Received message----*******-->:", res);
-  const svg = svgMapping[res.svg];
+(async () => {
+  const token = await figma.clientStorage.getAsync("authToken");
+  figma.ui.postMessage({
+    type: "pageLoadauthToken",
+    data: {
+      token: token,
+    },
+  });
+})();
 
-  const node = figma.createNodeFromSvg(svg);
-  figma.currentPage.appendChild(node);
-
-  figma.currentPage.selection = [node];
-  figma.viewport.scrollAndZoomIntoView([node]);
-
-  figma.notify("SVG component created successfully!");
-
-  figma.closePlugin();
+listenTS("logout", () => {
+  figma.clientStorage.deleteAsync("authToken");
+  figma.ui.postMessage({
+    type: "authToken",
+    data: {
+      token: null,
+    },
+  });
 });
 
 listenTS("closePlugin", () => {
@@ -27,7 +32,6 @@ listenTS("closePlugin", () => {
 });
 
 listenTS("fetchLibrary", async (msg) => {
-  console.log("Fetching library in code.ts----*******-->:", msg);
   try {
     const response = await fetch(
       "http://localhost:3000/api/library/get?token=" +
@@ -39,9 +43,6 @@ listenTS("fetchLibrary", async (msg) => {
     console.log("Library data in code.ts----*******-->:", data);
 
     if (response.ok) {
-      // Store library data in client storage
-
-      // Send library data back to UI
       figma.ui.postMessage({
         type: "libraryData",
         data: data,
@@ -69,7 +70,6 @@ listenTS("signIn", async (msg) => {
 
     const data = await response.json();
 
-    console.log("Sign in response in code.ts----*******-->:", data);
     figma.clientStorage.setAsync("authToken", data.token);
 
     if (response.ok) {
@@ -93,4 +93,45 @@ listenTS("signIn", async (msg) => {
       error: "Network error occurred",
     });
   }
+});
+
+// Add this function to get selected text nodes
+function getSelectedTextNodes() {
+  const selection = figma.currentPage.selection;
+  const textNodes = selection.filter(
+    (node): node is TextNode => node.type === "TEXT",
+  );
+  return textNodes;
+}
+
+// Add this listener to handle text selection
+listenTS("getSelectedText", () => {
+  const textNodes = getSelectedTextNodes();
+
+  if (textNodes.length === 0) {
+    figma.ui.postMessage({
+      type: "selectedText",
+      data: {
+        text: null,
+        error: "No text selected",
+      },
+    });
+    return;
+  }
+
+  // Get text content from all selected text nodes
+  const selectedText = textNodes.map((node) => ({
+    id: node.id,
+    characters: node.characters,
+    fontSize: node.fontSize,
+    fontName: node.fontName,
+  }));
+
+  figma.ui.postMessage({
+    type: "selectedText",
+    data: {
+      text: selectedText,
+      error: null,
+    },
+  });
 });

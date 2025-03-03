@@ -15,9 +15,9 @@ export const dispatchTS = <Key extends keyof EventTS>(
   dispatch({ event, data }, origin);
 };
 
-export const listenTS = <Key extends keyof EventTS>(
-  eventName: Key,
-  callback: (data: EventTS[Key]) => any,
+export const listenTS: any = (
+  eventName: any,
+  callback: (data: any) => any,
   listenOnce = false,
 ) => {
   const func = (event: any) => {
