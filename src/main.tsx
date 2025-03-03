@@ -27,7 +27,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ExternalLinkIcon, PowerIcon } from "lucide-react";
+import { ExternalLinkIcon, Link, PowerIcon } from "lucide-react";
 
 export const App = () => {
   // Mock data for Naruto characters
@@ -194,7 +194,12 @@ export const App = () => {
                       className="h-8 w-8 rounded-full p-0"
                       title="Open Web App"
                     >
-                      <ExternalLinkIcon className="h-4 w-4" />
+                      <a
+                        href="https://brandvoice.draftalpha.com"
+                        target="_blank"
+                      >
+                        <ExternalLinkIcon className="h-4 w-4" />
+                      </a>
                     </Button>
                     <Button
                       variant="ghost"
