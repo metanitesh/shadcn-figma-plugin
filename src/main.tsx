@@ -1,40 +1,14 @@
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { useState, useEffect } from "react";
-import type { narutoCharacter } from "./lib/types";
 import { dispatchTS } from "./utils/utils";
-import svgs from "./lib/svgs";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ExternalLinkIcon, Link, PowerIcon } from "lucide-react";
+import { ExternalLinkIcon, Loader, PowerIcon, XCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const App = () => {
-  // Mock data for Naruto characters
-
-  const [selectedCharacter, setSelectedCharacter] = useState<
-    (typeof libraryData)[0] | undefined
-  >();
   const [searchQuery, setSearchQuery] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -42,6 +16,35 @@ export const App = () => {
   const [libraryData, setLibraryData] = useState<any>([]);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState<Record<string, boolean>>({});
+  const [brandFeedback, setBrandFeedback] = useState<{
+    violatedGuidelines: {
+      type: string;
+      name: string;
+      description: string;
+      violation: string;
+    }[];
+    feedback: string;
+    textId?: string;
+  } | null>(null);
+  const [writingFeedback, setWritingFeedback] = useState<{
+    violatedRules: {
+      type: string;
+      name: string;
+      description: string;
+      violation: string;
+    }[];
+    feedback: string;
+    textId?: string;
+  } | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<
+    (typeof libraryData)[0] | undefined
+  >();
+  const [checkOptions, setCheckOptions] = useState({
+    brandGuideline: true,
+    writingRules: false,
+    referenceLibrary: false,
+  });
 
   useEffect(() => {
     if (
@@ -85,10 +88,84 @@ export const App = () => {
     dispatchTS("logout", {});
   };
 
-  // Group characters by type
-
   const getSelectedText = () => {
     dispatchTS("getSelectedText", {});
+  };
+
+  const applyGuidelines = async (textId: string, textToImprove: string) => {
+    try {
+      // Set loading state for this specific text
+      setIsProcessing((prev) => ({ ...prev, [textId]: true }));
+
+      // Apply brand guidelines if selected
+      if (checkOptions.brandGuideline) {
+        const validationResponse = await fetch(
+          "http://localhost:3000/api/validate/brand-foundation/check",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              authToken,
+              textToImprove,
+              includeWritingFoundation: checkOptions.writingRules,
+            }),
+          },
+        );
+
+        const data = await validationResponse.json();
+        console.log("Brand foundation validation:", data);
+
+        // Store the feedback in state
+        setBrandFeedback({
+          violatedGuidelines: data.violatedGuidelines || [],
+          feedback: data.feedback || "",
+          textId: textId,
+        });
+      }
+
+      // Apply reference library check if selected
+      if (checkOptions.referenceLibrary) {
+        // Add implementation for reference library check
+        console.log("Reference library check requested for:", textToImprove);
+        // You would add the API call here
+      }
+
+      // Apply writing rules if selected (if not already included in brand guidelines)
+      if (checkOptions.writingRules) {
+        const validationResponse = await fetch(
+          "http://localhost:3000/api/validate/writing-rules/check",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              authToken,
+              textToImprove,
+            }),
+          },
+        );
+
+        const data = await validationResponse.json();
+        console.log("Writing rules validation:", data);
+
+        // Store the feedback in state
+        setWritingFeedback({
+          violatedRules: data.violatedRules || [],
+          feedback: data.feedback || "",
+          textId: textId,
+        });
+      }
+    } catch (error) {
+      console.error("Error applying guidelines:", error);
+    } finally {
+      // Clear loading state
+      setIsProcessing((prev) => ({ ...prev, [textId]: false }));
+    }
   };
 
   window.onmessage = (event) => {
@@ -168,8 +245,14 @@ export const App = () => {
           ) : (
             // Show content library and brand guidelines tabs when authenticated
             <div className="relative">
-              <Tabs defaultValue="content-library" className="mb-6 w-full">
+              <Tabs defaultValue="brand-guidelines" className="mb-6 w-full">
                 <TabsList className="flex w-full items-center justify-between border-b bg-white p-1 shadow-none">
+                  <TabsTrigger
+                    value="brand-guidelines"
+                    className="px-3 py-1.5 text-sm font-medium shadow-none active:bg-red-200"
+                  >
+                    Brand Guidelines
+                  </TabsTrigger>
                   <div className="flex">
                     <TabsTrigger
                       value="content-library"
@@ -179,12 +262,6 @@ export const App = () => {
                       className="px-3 py-1.5 text-sm font-medium shadow-none active:bg-red-200"
                     >
                       Content Library
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="brand-guidelines"
-                      className="px-3 py-1.5 text-sm font-medium shadow-none active:bg-red-200"
-                    >
-                      Brand Guidelines
                     </TabsTrigger>
                   </div>
                   <div className="flex items-center space-x-2 pr-2">
@@ -212,7 +289,211 @@ export const App = () => {
                     </Button>
                   </div>
                 </TabsList>
+                <TabsContent value="brand-guidelines">
+                  <div className="absolute -top-4 right-0 mb-4 flex justify-end"></div>
+                  <div className="rounded-md border p-4">
+                    <Button
+                      onClick={getSelectedText}
+                      className="mb-4 bg-orange-500 px-3 py-1 text-sm hover:bg-orange-600"
+                    >
+                      Connect selected frame
+                    </Button>
 
+                    {selectedText && (
+                      <div className="space-y-2">
+                        {selectedText.map((text: any) => (
+                          <div key={text.id} className="rounded bg-gray-50 p-2">
+                            <p className="text-sm">Text: {text.characters}</p>
+
+                            <div className="mt-2 space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`brand-guideline-${text.id}`}
+                                  checked={checkOptions.brandGuideline}
+                                  onCheckedChange={(checked) =>
+                                    setCheckOptions((prev) => ({
+                                      ...prev,
+                                      brandGuideline: !!checked,
+                                    }))
+                                  }
+                                />
+                                <Label
+                                  htmlFor={`brand-guideline-${text.id}`}
+                                  className="text-sm"
+                                >
+                                  Apply Brand Guideline
+                                </Label>
+                              </div>
+
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`writing-rules-${text.id}`}
+                                  checked={checkOptions.writingRules}
+                                  onCheckedChange={(checked) =>
+                                    setCheckOptions((prev) => ({
+                                      ...prev,
+                                      writingRules: !!checked,
+                                    }))
+                                  }
+                                />
+                                <Label
+                                  htmlFor={`writing-rules-${text.id}`}
+                                  className="text-sm"
+                                >
+                                  Writing Rules
+                                </Label>
+                              </div>
+
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`reference-library-${text.id}`}
+                                  checked={checkOptions.referenceLibrary}
+                                  onCheckedChange={(checked) =>
+                                    setCheckOptions((prev) => ({
+                                      ...prev,
+                                      referenceLibrary: !!checked,
+                                    }))
+                                  }
+                                />
+                                <Label
+                                  htmlFor={`reference-library-${text.id}`}
+                                  className="text-sm"
+                                >
+                                  Reference Library
+                                </Label>
+                              </div>
+                            </div>
+
+                            <Button
+                              className="mt-4 bg-orange-500 px-3 py-1 text-sm hover:bg-orange-600"
+                              onClick={() =>
+                                applyGuidelines(text.id, text.characters)
+                              }
+                              disabled={
+                                isProcessing[text.id] ||
+                                (!checkOptions.brandGuideline &&
+                                  !checkOptions.writingRules &&
+                                  !checkOptions.referenceLibrary)
+                              }
+                            >
+                              {isProcessing[text.id] ? (
+                                <span className="flex items-center">
+                                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                  Processing...
+                                </span>
+                              ) : (
+                                "Apply Guidelines"
+                              )}
+                            </Button>
+
+                            {brandFeedback &&
+                              brandFeedback.textId === text.id && (
+                                <div className="mt-4 rounded border border-gray-200 p-3">
+                                  <h3 className="mb-2 text-sm font-medium">
+                                    Brand Guidelines Analysis
+                                  </h3>
+
+                                  {brandFeedback.violatedGuidelines &&
+                                    brandFeedback.violatedGuidelines.length >
+                                      0 && (
+                                      <div className="mb-3">
+                                        <h4 className="mb-1 text-xs font-medium text-red-700">
+                                          Violated Guidelines:
+                                        </h4>
+                                        <ul className="space-y-2">
+                                          {brandFeedback.violatedGuidelines.map(
+                                            (guideline, index) => (
+                                              <li
+                                                key={index}
+                                                className="rounded-md border border-red-100 bg-red-50 p-2"
+                                              >
+                                                <div className="flex items-center text-xs font-medium text-red-800">
+                                                  <XCircle className="mr-1 h-3 w-3 text-red-600" />
+                                                  {guideline.type}:{" "}
+                                                  {guideline.name}
+                                                </div>
+                                                {/* <p className="mt-1 text-xs text-gray-700">
+                                                  {guideline.description}
+                                                </p> */}
+                                                <p className="mt-2 text-xs italic text-red-700">
+                                                  {guideline.violation}
+                                                </p>
+                                              </li>
+                                            ),
+                                          )}
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                  {/* {brandFeedback.feedback &&
+                                    brandFeedback.feedback !== "." && (
+                                      <div>
+                                        <h4 className="mb-1 text-xs font-medium">
+                                          Feedback:
+                                        </h4>
+                                        <p className="text-xs">
+                                          {brandFeedback.feedback}
+                                        </p>
+                                      </div>
+                                    )} */}
+                                </div>
+                              )}
+
+                            {writingFeedback &&
+                              writingFeedback.textId === text.id && (
+                                <div className="mt-4 rounded border border-gray-200 p-3">
+                                  <h3 className="mb-2 text-sm font-medium">
+                                    Writing Rules Analysis
+                                  </h3>
+
+                                  {writingFeedback.violatedRules &&
+                                    writingFeedback.violatedRules.length >
+                                      0 && (
+                                      <div className="mb-3">
+                                        <h4 className="mb-1 text-xs font-medium text-red-700">
+                                          Writing Issues:
+                                        </h4>
+                                        <ul className="space-y-2">
+                                          {writingFeedback.violatedRules.map(
+                                            (guideline, index) => (
+                                              <li
+                                                key={index}
+                                                className="rounded-md border border-orange-100 bg-orange-50 p-2"
+                                              >
+                                                <div className="flex items-center text-xs font-medium text-orange-800">
+                                                  <XCircle className="mr-1 h-3 w-3 text-orange-600" />
+                                                  {guideline.type}:{" "}
+                                                  {guideline.name}
+                                                </div>
+                                                <p className="mt-2 text-xs italic text-orange-700">
+                                                  {guideline.violation}
+                                                </p>
+                                              </li>
+                                            ),
+                                          )}
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                  {writingFeedback.feedback &&
+                                    writingFeedback.feedback !== "." && (
+                                      <div>
+                                        <h4 className="mb-1 text-xs font-medium">
+                                          Suggestions:
+                                        </h4>
+                                        <p className="text-xs">
+                                          {writingFeedback.feedback}
+                                        </p>
+                                      </div>
+                                    )}
+                                </div>
+                              )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
                 <TabsContent value="content-library">
                   <div className="mb-4 flex items-center justify-between">
                     <Input
@@ -260,44 +541,6 @@ export const App = () => {
                         </li>
                       ))}
                     </ul>
-                  </div>
-
-                  {/* <div className="mt-4 flex justify-between"> */}
-                  {/* <Button
-                      onClick={onClickCreate}
-                      disabled={!selectedCharacter}
-                    >
-                      Create
-                    </Button>
-                    <Button variant="outline" onClick={onClickClose}>
-                      Close
-                    </Button> */}
-                  {/* </div> */}
-                </TabsContent>
-
-                <TabsContent value="brand-guidelines">
-                  <div className="absolute -top-4 right-0 mb-4 flex justify-end"></div>
-                  <div className="rounded-md border p-4">
-                    <Button onClick={getSelectedText} className="mb-4">
-                      Get Selected Text
-                    </Button>
-
-                    {selectedText && (
-                      <div className="space-y-2">
-                        {selectedText.map((text: any) => (
-                          <div key={text.id} className="rounded bg-gray-50 p-2">
-                            <p className="text-sm">Text: {text.characters}</p>
-                            <p className="text-xs text-gray-500">
-                              Font:{" "}
-                              {typeof text.fontName === "object"
-                                ? text.fontName.family
-                                : text.fontName}
-                              {text.fontSize && `, Size: ${text.fontSize}`}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </TabsContent>
               </Tabs>

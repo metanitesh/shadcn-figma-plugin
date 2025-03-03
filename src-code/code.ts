@@ -123,8 +123,6 @@ listenTS("getSelectedText", () => {
   const selectedText = textNodes.map((node) => ({
     id: node.id,
     characters: node.characters,
-    fontSize: node.fontSize,
-    fontName: node.fontName,
   }));
 
   figma.ui.postMessage({
