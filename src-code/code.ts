@@ -34,13 +34,11 @@ listenTS("closePlugin", () => {
 listenTS("fetchLibrary", async (msg) => {
   try {
     const response = await fetch(
-      "http://localhost:3000/api/library/get?token=" +
+      "https://brandvoice.draftalpha.com/api/library/get?token=" +
         (await figma.clientStorage.getAsync("authToken")),
     );
 
     const data = await response.json();
-
-    console.log("Library data in code.ts----*******-->:", data);
 
     if (response.ok) {
       figma.ui.postMessage({
@@ -57,16 +55,19 @@ listenTS("fetchLibrary", async (msg) => {
 
 listenTS("signIn", async (msg) => {
   try {
-    const response = await fetch("http://localhost:3000/api/externtal-auth", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://brandvoice.draftalpha.com/api/externtal-auth",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: msg.username,
+          password: msg.password,
+        }),
       },
-      body: JSON.stringify({
-        username: msg.username,
-        password: msg.password,
-      }),
-    });
+    );
 
     const data = await response.json();
 
@@ -132,4 +133,49 @@ listenTS("getSelectedText", () => {
       error: null,
     },
   });
+});
+listenTS("applyText", async (msg) => {
+  const textNodes = getSelectedTextNodes();
+  if (textNodes.length === 0) {
+    figma.ui.postMessage({
+      type: "applyTextResponse",
+      data: {
+        success: false,
+        error: "No text selected",
+      },
+    });
+    return;
+  } else {
+    try {
+      // Load fonts for each text node before modifying text
+      for (const node of textNodes) {
+        // Get all fonts used in the node
+        const fontNames = node.getRangeAllFontNames(0, node.characters.length);
+        // Load each font
+        for (const font of fontNames) {
+          await figma.loadFontAsync(font);
+        }
+      }
+
+      // After fonts are loaded, update the text
+      textNodes.forEach((node) => {
+        node.characters = msg.text;
+      });
+
+      figma.ui.postMessage({
+        type: "applyTextResponse",
+        data: {
+          success: true,
+        },
+      });
+    } catch (error) {
+      figma.ui.postMessage({
+        type: "applyTextResponse",
+        data: {
+          success: false,
+          error: "Failed to load fonts: " + error.message,
+        },
+      });
+    }
+  }
 });

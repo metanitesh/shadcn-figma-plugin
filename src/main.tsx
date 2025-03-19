@@ -5,7 +5,13 @@ import { dispatchTS } from "./utils/utils";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { ExternalLinkIcon, Loader, PowerIcon, XCircle } from "lucide-react";
+import {
+  CircleCheck,
+  ExternalLinkIcon,
+  Loader,
+  PowerIcon,
+  XCircle,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export const App = () => {
@@ -37,6 +43,7 @@ export const App = () => {
     feedback: string;
     textId?: string;
   } | null>(null);
+  const [referenceFeedback, setReferenceFeedback] = useState<any>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<
     (typeof libraryData)[0] | undefined
   >();
@@ -45,6 +52,7 @@ export const App = () => {
     writingRules: false,
     referenceLibrary: false,
   });
+  const [outputs, setOutputs] = useState<any>(null);
 
   useEffect(() => {
     if (
@@ -92,6 +100,10 @@ export const App = () => {
     dispatchTS("getSelectedText", {});
   };
 
+  let brandGuidelinesResponse: any;
+  let writingRulesResponse: any;
+  let referenceLibraryResponse: any;
+
   const applyGuidelines = async (textId: string, textToImprove: string) => {
     try {
       // Set loading state for this specific text
@@ -100,7 +112,7 @@ export const App = () => {
       // Apply brand guidelines if selected
       if (checkOptions.brandGuideline) {
         const validationResponse = await fetch(
-          "http://localhost:3000/api/validate/brand-foundation/check",
+          "https://brandvoice.draftalpha.com/api/validate/brand-foundation/check",
           {
             method: "POST",
             headers: {
@@ -117,7 +129,7 @@ export const App = () => {
 
         const data = await validationResponse.json();
         console.log("Brand foundation validation:", data);
-
+        brandGuidelinesResponse = data;
         // Store the feedback in state
         setBrandFeedback({
           violatedGuidelines: data.violatedGuidelines || [],
@@ -126,17 +138,10 @@ export const App = () => {
         });
       }
 
-      // Apply reference library check if selected
-      if (checkOptions.referenceLibrary) {
-        // Add implementation for reference library check
-        console.log("Reference library check requested for:", textToImprove);
-        // You would add the API call here
-      }
-
       // Apply writing rules if selected (if not already included in brand guidelines)
       if (checkOptions.writingRules) {
         const validationResponse = await fetch(
-          "http://localhost:3000/api/validate/writing-rules/check",
+          "https://brandvoice.draftalpha.com/api/validate/writing-rules/check",
           {
             method: "POST",
             headers: {
@@ -151,6 +156,7 @@ export const App = () => {
         );
 
         const data = await validationResponse.json();
+        writingRulesResponse = data;
         console.log("Writing rules validation:", data);
 
         // Store the feedback in state
@@ -160,6 +166,53 @@ export const App = () => {
           textId: textId,
         });
       }
+
+      if (checkOptions.referenceLibrary) {
+        const referenceResponse = await fetch(
+          "https://brandvoice.draftalpha.com/api/vectors",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              authToken,
+              text: textToImprove,
+            }),
+          },
+        );
+
+        const referenceData = await referenceResponse.json();
+        console.log("Reference library check:", referenceData);
+        referenceLibraryResponse = referenceData;
+        // Store the feedback in state
+        setReferenceFeedback({
+          results: referenceData.results || [],
+        });
+      }
+
+      const outputs = await fetch(
+        "https://brandvoice.draftalpha.com/api/generate-figma",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            authToken,
+            textToImprove,
+            referenceLibrary: referenceLibraryResponse?.results || [],
+            brandGuideline: brandGuidelinesResponse?.violatedGuidelines || [],
+            writingRules: writingRulesResponse?.violatedRules || [],
+          }),
+        },
+      );
+
+      const outputsData = await outputs.json();
+      console.log("Outputs:", outputsData);
+      setOutputs(outputsData);
     } catch (error) {
       console.error("Error applying guidelines:", error);
     } finally {
@@ -488,6 +541,65 @@ export const App = () => {
                                     )}
                                 </div>
                               )}
+
+                            {referenceFeedback &&
+                              referenceFeedback.results.length > 0 && (
+                                <div className="mt-4 rounded border border-gray-200 p-3">
+                                  <h3 className="mb-2 text-sm font-medium">
+                                    Reference Library Analysis
+                                  </h3>
+                                  <ul className="space-y-2">
+                                    {referenceFeedback.results.map(
+                                      (result: any, index: number) => (
+                                        <li
+                                          key={index}
+                                          className="rounded-md border border-orange-100 bg-orange-50 p-2"
+                                        >
+                                          <div className="flex items-center text-xs font-medium text-orange-800">
+                                            <CircleCheck className="mr-1 h-3 w-3 text-orange-600" />
+                                            {result.data}
+                                          </div>
+                                        </li>
+                                      ),
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
+
+                            {outputs && (
+                              <div className="mt-4 rounded border border-gray-200 p-3">
+                                <h3 className="mb-2 text-sm font-medium">
+                                  Suggested Text
+                                </h3>
+                                <ul className="space-y-2">
+                                  {outputs.text?.map(
+                                    (rawText: any, index: number) => (
+                                      <li
+                                        key={index}
+                                        className="rounded-md border border-green-100 bg-green-50 p-2"
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <div className="text-xs font-medium text-green-800">
+                                            {rawText}
+                                          </div>
+                                          <Button
+                                            size="sm"
+                                            className="ml-2 h-6 bg-green-600 px-2 py-1 text-xs hover:bg-green-700"
+                                            onClick={() =>
+                                              dispatchTS("applyText", {
+                                                text: rawText,
+                                              })
+                                            }
+                                          >
+                                            Apply
+                                          </Button>
+                                        </div>
+                                      </li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -530,12 +642,26 @@ export const App = () => {
                                   )}
                               </div>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              {libraryItem.status === "active" && (
-                                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
-                                  Active
-                                </span>
-                              )}
+                            <div className="flex items-center gap-2">
+                              <div className="text-xs text-gray-500">
+                                {libraryItem.status === "active" && (
+                                  <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
+                                    Active
+                                  </span>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                className="h-6 bg-green-600 px-2 py-1 text-xs hover:bg-green-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dispatchTS("applyText", {
+                                    text: libraryItem.copy,
+                                  });
+                                }}
+                              >
+                                Apply
+                              </Button>
                             </div>
                           </div>
                         </li>
